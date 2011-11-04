@@ -1,0 +1,77 @@
+HOSTNAME:=$(shell hostname)
+DATETIME:=$(shell date)
+RUND:=$(shell pwd)
+EXTRAD=$(RUND)/extra-$(ARCH)
+CHROOTD=/home/mones/chroot
+MIRROR=http://ftp.fr.debian.org/debian/
+SUITE=unstable
+ORIGIN=Ricardo Mones
+LABEL=Claws Mail CVS Autobuilt Debian Packages
+DEBGITP=file:///home/mones/workg/tmp
+
+all: claws-deb-$(ARCH) plugins-deb-$(ARCH) update-final-extra-$(ARCH)
+	@echo "All done."
+
+claws-mail-$(VERSION).tar.gz:
+	make -f Makefile.dist VERSION=$(VERSION) $@
+
+claws-mail-extra-plugins-$(VERSION).tar.gz:
+	make -f Makefile.dist VERSION=$(VERSION) $@
+
+extra-$(ARCH):
+	test -d $@ || mkdir $@
+
+update-extra-$(ARCH): extra-$(ARCH)
+	cd $< && apt-ftparchive packages . > _ && cp -fp _ Packages && rm -f Packages.gz && gzip Packages && mv _ Packages && cd ..
+	cd $< && apt-ftparchive sources . > _ && cp -fp _ Sources && rm -f Sources.gz && gzip Sources && mv _ Sources && cd ..
+	cd $< && apt-ftparchive -o APT::FTPArchive::Release::Suite="$(SUITE)" -o APT::FTPArchive::Release::Components="main" -o APT::FTPArchive::Release::Origin="$(ORIGIN)" -o APT::FTPArchive::Release::Label="$(LABEL)" -o APT::FTPArchive::Release::Architectures="$(ARCH) source all" release . > Release && cd ..
+	test -f ./release.key.pw -a -f ./release.key.id && rm -f $</Release.gpg && gpg --no-tty --passphrase-file ./release.key.pw --default-key `cat ./release.key.id` -abs -o $</Release.gpg $</Release
+
+update-claws-extra-$(ARCH): update-extra-$(ARCH)
+	touch $@
+
+update-plugins-extra-$(ARCH): update-extra-$(ARCH)
+	touch $@
+
+update-full-extra-$(ARCH): update-extra-$(ARCH)
+	touch $@
+
+update-claws-cow-$(ARCH): update-claws-extra-$(ARCH)
+	sudo /usr/sbin/pbuilder update --basetgz $(CHROOTD)/$(ARCH).tgz --mirror $(MIRROR) --distribution sid --bindmounts $(RUND) --override-config --othermirror "deb file://$(EXTRAD) ./"
+
+claws-deb-$(ARCH): claws-mail-$(VERSION).tar.gz update-claws-cow-$(ARCH)
+	test -d $@ || mkdir $@
+	cp -p $< $@/claws-mail_$(VERSION).orig.tar.gz
+	cd $@ && tar xzf claws-mail_$(VERSION).orig.tar.gz && cd ..
+	git clone $(DEBGITP)/claws-mail $@/claws-mail-$(VERSION)/debian
+	rm -rf $@/claws-mail-$(VERSION)/debian/.git*
+	env DEBEMAIL=autobuilder@claws-mail.org DEBFULLNAME=CMAB debchange -c $@/claws-mail-$(VERSION)/debian/changelog -D experimental -v $(VERSION)-1 "Automatic build at $(HOSTNAME)"
+	test -d $(RUND)/logs || mkdir -p $(RUND)/logs
+	test -d $(RUND)/build || mkdir -p $(RUND)/build
+	cd $@/claws-mail-$(VERSION) && sudo pdebuild --buildresult .. -- --bindmounts $(RUND) --override-config --mirror $(MIRROR) --distribution sid --othermirror "deb file://$(EXTRAD) ./" --buildplace $(RUND)/build --basetgz $(CHROOTD)/$(ARCH).tgz --logfile $(RUND)/logs/claws_$(ARCH)_$(VERSION).log && cd ../..
+	cp $@/*$(VERSION)*.deb $@/*$(VERSION)*.dsc $@/*$(VERSION)*.changes $@/*$(VERSION)*.tar.gz $(EXTRAD)/
+
+update-plugins-cow-$(ARCH): update-plugins-extra-$(ARCH)
+	sudo /usr/sbin/pbuilder update --basetgz $(CHROOTD)/$(ARCH).tgz --mirror $(MIRROR) --distribution sid --bindmounts $(RUND) --override-config --othermirror "deb file://$(EXTRAD) ./"
+
+plugins-deb-$(ARCH): claws-mail-extra-plugins-$(VERSION).tar.gz update-plugins-cow-$(ARCH)
+	test -d $@ || mkdir $@
+	cp -p $< $@/claws-mail-extra-plugins_$(VERSION).orig.tar.gz
+	cd $@ && tar xzf claws-mail-extra-plugins_$(VERSION).orig.tar.gz && cd ..
+	git clone $(DEBGITP)/claws-mail-extra-plugins $@/claws-mail-extra-plugins-$(VERSION)/debian
+	rm -rf $@/claws-mail-extra-plugins-$(VERSION)/debian/.git*
+	env DEBEMAIL=autobuilder@claws-mail.org DEBFULLNAME=CMAB debchange -c $@/claws-mail-extra-plugins-$(VERSION)/debian/changelog -D experimental -v $(VERSION)-1 "Automatic build at "`hostname`
+	test -d $(RUND)/logs || mkdir -p $(RUND)/logs
+	test -d $(RUND)/build || mkdir -p $(RUND)/build
+	cd $@/claws-mail-extra-plugins-$(VERSION) && sudo pdebuild --buildresult .. -- --bindmounts $(RUND) --override-config --mirror $(MIRROR) --distribution sid --othermirror "deb file://$(EXTRAD) ./" --buildplace $(RUND)/build --basetgz $(CHROOTD)/$(ARCH).tgz --logfile $(RUND)/logs/plugins_$(ARCH)_$(VERSION).log && cd ../..
+	cp $@/*$(VERSION)*.deb $@/*$(VERSION)*.dsc $@/*$(VERSION)*.changes $@/*$(VERSION)*.tar.gz $(EXTRAD)/
+
+clean:
+	sudo rm -rf claws-deb-$(ARCH) plugins-deb-$(ARCH)
+	sudo rm -f update-*-extra-$(ARCH)
+
+mrproper: clean
+	sudo rm -rf extra-$(ARCH)
+
+.PHONY: clean mrproper
+

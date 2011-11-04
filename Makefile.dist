@@ -1,0 +1,46 @@
+CVSROOT=:pserver:anonymous@claws-mail.org:/
+PLUGIN_LIST=acpi_notifier address_keeper archive att_remover attachwarner clamd etpan-privacy fetchinfo gtkhtml2_viewer maildir mailmbox newmail notification perl rssyl spam_report tnef_parse vcalendar bsfilter fancy python geolocation gdata 
+HOSTNAME:=$(shell hostname)
+DATETIME:=$(shell date)
+
+all: get-origs
+
+get-origs: claws-mail-$(VERSION).tar.gz claws-mail-extra-plugins-$(VERSION).tar.gz
+
+claws:
+	cvs -z3 -d$(CVSROOT) checkout -r gtk2 $@
+
+plugins:
+	cvs -z3 -d$(CVSROOT) checkout -r gtk2 $@
+
+update-claws: claws
+	cd $< && cvs -z3 up -dP && cd ..
+
+update-plugins: plugins
+	cd $< && cvs -z3 up -dP && cd ..
+
+claws-dev: update-claws
+	cp -rp $< $@
+
+plugins-dev: update-plugins
+	cp -rp $< $@
+
+claws-mail-extra-plugins-$(VERSION): plugins-dev
+	for plugin in $(PLUGIN_LIST); do cd $</$$plugin && ./autogen.sh && make dist && cd ../..; done
+	mkdir ./claws-mail-extra-plugins-$(VERSION)
+	for plugin in $(PLUGIN_LIST); do tar -C ./claws-mail-extra-plugins-$(VERSION) -xzf $</$$plugin/*.tar.gz; done
+	echo "Automatic build for plugins $(VERSION) on $(HOSTNAME) at $(DATETIME)" > ./claws-mail-extra-plugins-$(VERSION)/RELEASE_NOTES
+
+claws-mail-$(VERSION).tar.gz: claws-dev
+	cd claws-dev && ./autogen.sh && make dist && cd ..
+	cp -v claws-dev/$@ .
+	
+claws-mail-extra-plugins-$(VERSION).tar.gz: claws-mail-extra-plugins-$(VERSION) 
+	tar -czf $@ $<
+	rm -rf $<
+
+clean-origs:
+	rm -f claws-mail-$(VERSION).tar.gz
+	rm -f claws-mail-extra-plugins-$(VERSION).tar.gz
+
+.PHONY: get-origs clean-origs update-claws update-plugins
