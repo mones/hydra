@@ -76,14 +76,31 @@ sub is_greater_version {
   return $res;
 }
 
+sub check_make_error {
+  my $log = shift;
+  open (LOG, "<$log") or die "opening $log: $!\n";
+  my $last = <LOG>;
+  while (<LOG>) { $last = $_ }
+  close(LOG) or die "closing $log: $!\n" ;
+  $_ = $last;
+  die "Finished with error. Check $log for details.\n"
+    if (/^make.*Error/);
+}
+
 &refresh_module ("claws");
 &refresh_module ("plugins");
 $VER = &get_version ("claws/configure.ac");
 $OLD = &get_version ("claws-dev/configure.ac");
 if (&is_greater_version ($VER, $OLD)) {
-  qx,make -f $MKD VERSION=$VER,;
+  my $logname = "logs/hydra.$VER.log";
+  print "New version $VER found (previus was $OLD)\n";
+  qx,make -f $MKD VERSION=$VER > $logname 2>&1,;
+  &check_make_error($logname);
   foreach my $ARCH ("amd64", "i386") {
-    qx,make -f $MKA VERSION=$VER ARCH=$ARCH,;
+    qx,make -f $MKA VERSION=$OLD ARCH=$ARCH backup >> $logname 2>&1,;
+    &check_make_error($logname);
+    qx,make -f $MKA VERSION=$VER ARCH=$ARCH >> $logname 2>&1,;
+    &check_make_error($logname);
   }
 }
 
