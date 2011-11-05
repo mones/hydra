@@ -66,6 +66,11 @@ plugins-deb-$(ARCH): claws-mail-extra-plugins-$(VERSION).tar.gz update-plugins-c
 	cd $@/claws-mail-extra-plugins-$(VERSION) && sudo pdebuild --buildresult .. -- --bindmounts $(RUND) --override-config --mirror $(MIRROR) --distribution sid --othermirror "deb file://$(EXTRAD) ./" --buildplace $(RUND)/build --basetgz $(CHROOTD)/$(ARCH).tgz --logfile $(RUND)/logs/plugins_$(ARCH)_$(VERSION).log && cd ../..
 	cp $@/*$(VERSION)*.deb $@/*$(VERSION)*.dsc $@/*$(VERSION)*.changes $@/*$(VERSION)*.tar.gz $(EXTRAD)/
 
+backup:
+	test -d $(RUND)/old/$(ARCH)-$(VERSION) || mkdir -p $(RUND)/old/$(ARCH)-$(VERSION)
+	mv $(EXTRAD)/*$(VERSION)*.deb $(EXTRAD)/*$(VERSION)*.dsc $(EXTRAD)/*$(VERSION)*.changes $(EXTRAD)/*$(VERSION)*.tar.gz $(RUND)/old/$(ARCH)-$(VERSION)
+	mv $(EXTRAD)/Packages* $(EXTRAD)/Release* $(EXTRAD)/Sources* $(RUND)/old/$(ARCH)-$(VERSION)
+
 clean:
 	sudo rm -rf claws-deb-$(ARCH) plugins-deb-$(ARCH)
 	sudo rm -f update-*-extra-$(ARCH)
@@ -73,5 +78,5 @@ clean:
 mrproper: clean
 	sudo rm -rf extra-$(ARCH)
 
-.PHONY: clean mrproper
+.PHONY: clean mrproper backup
 
