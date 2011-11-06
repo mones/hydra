@@ -93,12 +93,14 @@ $VER = &get_version ("claws/configure.ac");
 $OLD = &get_version ("claws-dev/configure.ac");
 if (&is_greater_version ($VER, $OLD)) {
   my $logname = "logs/hydra.$VER.log";
-  print "New version $VER found (previus was $OLD)\n";
+  print "Building new version $VER (previus was $OLD)\n";
   qx,make -f $MKD VERSION=$VER > $logname 2>&1,;
   &check_make_error($logname);
   foreach my $ARCH ("amd64", "i386") {
+    print "Archiving previous $OLD packages for $ARCH\n";
     qx,make -f $MKA VERSION=$OLD ARCH=$ARCH backup >> $logname 2>&1,;
     &check_make_error($logname);
+    print "Building new $VER packages for $ARCH\n";
     qx,make -f $MKA VERSION=$VER ARCH=$ARCH >> $logname 2>&1,;
     &check_make_error($logname);
   }
