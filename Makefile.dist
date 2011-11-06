@@ -20,10 +20,10 @@ update-plugins: plugins
 	cd $< && cvs -z3 up -dP && cd ..
 
 claws-dev: update-claws
-	cp -rp $< $@
+	cp -rp claws $@
 
 plugins-dev: update-plugins
-	cp -rp $< $@
+	cp -rp plugins $@
 
 claws-mail-extra-plugins-$(VERSION): plugins-dev
 	for plugin in $(PLUGIN_LIST); do cd $</$$plugin && ./autogen.sh && make dist && cd ../..; done
