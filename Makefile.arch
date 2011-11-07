@@ -9,14 +9,11 @@ ORIGIN=Ricardo Mones
 LABEL=Claws Mail CVS Autobuilt Debian Packages
 DEBGITP=file:///home/mones/workg/tmp
 
-all: claws-deb-$(ARCH) plugins-deb-$(ARCH) update-final-extra-$(ARCH)
-	@echo "All done."
+claws-mail-$(VERS).tar.gz:
+	make -f Makefile.dist VERS=$(VERS) $@
 
-claws-mail-$(VERSION).tar.gz:
-	make -f Makefile.dist VERSION=$(VERSION) $@
-
-claws-mail-extra-plugins-$(VERSION).tar.gz:
-	make -f Makefile.dist VERSION=$(VERSION) $@
+claws-mail-extra-plugins-$(VERS).tar.gz:
+	make -f Makefile.dist VERS=$(VERS) $@
 
 extra-$(ARCH):
 	test -d $@ || mkdir $@
@@ -33,43 +30,43 @@ update-claws-extra-$(ARCH): update-extra-$(ARCH)
 update-plugins-extra-$(ARCH): update-extra-$(ARCH)
 	touch $@
 
-update-full-extra-$(ARCH): update-extra-$(ARCH)
+update-final-extra-$(ARCH): update-extra-$(ARCH)
 	touch $@
 
 update-claws-cow-$(ARCH): update-claws-extra-$(ARCH)
 	sudo /usr/sbin/pbuilder update --basetgz $(CHROOTD)/$(ARCH).tgz --mirror $(MIRROR) --distribution sid --bindmounts $(RUND) --override-config --othermirror "deb file://$(EXTRAD) ./"
 
-claws-deb-$(ARCH): claws-mail-$(VERSION).tar.gz update-claws-cow-$(ARCH)
+claws-deb-$(ARCH): claws-mail-$(VERS).tar.gz update-claws-cow-$(ARCH)
 	test -d $@ || mkdir $@
-	cp -p $< $@/claws-mail_$(VERSION).orig.tar.gz
-	cd $@ && tar xzf claws-mail_$(VERSION).orig.tar.gz && cd ..
-	git clone $(DEBGITP)/claws-mail $@/claws-mail-$(VERSION)/debian
-	rm -rf $@/claws-mail-$(VERSION)/debian/.git*
-	env DEBEMAIL=autobuilder@claws-mail.org DEBFULLNAME=CMAB debchange -c $@/claws-mail-$(VERSION)/debian/changelog -D experimental -v $(VERSION)-1 "Automatic build at $(HOSTNAME)"
+	cp -p $< $@/claws-mail_$(VERS).orig.tar.gz
+	cd $@ && tar xzf claws-mail_$(VERS).orig.tar.gz && cd ..
+	git clone $(DEBGITP)/claws-mail $@/claws-mail-$(VERS)/debian
+	rm -rf $@/claws-mail-$(VERS)/debian/.git*
+	env DEBEMAIL=autobuilder@claws-mail.org DEBFULLNAME=CMAB debchange -c $@/claws-mail-$(VERS)/debian/changelog -D experimental -v $(VERS)-1 "Automatic build at $(HOSTNAME)"
 	test -d $(RUND)/logs || mkdir -p $(RUND)/logs
 	test -d $(RUND)/build || mkdir -p $(RUND)/build
-	cd $@/claws-mail-$(VERSION) && sudo pdebuild --buildresult .. -- --bindmounts $(RUND) --override-config --mirror $(MIRROR) --distribution sid --othermirror "deb file://$(EXTRAD) ./" --buildplace $(RUND)/build --basetgz $(CHROOTD)/$(ARCH).tgz --logfile $(RUND)/logs/claws_$(ARCH)_$(VERSION).log && cd ../..
-	cp $@/*$(VERSION)*.deb $@/*$(VERSION)*.dsc $@/*$(VERSION)*.changes $@/*$(VERSION)*.tar.gz $(EXTRAD)/
+	cd $@/claws-mail-$(VERS) && sudo pdebuild --buildresult .. -- --bindmounts $(RUND) --override-config --mirror $(MIRROR) --distribution sid --othermirror "deb file://$(EXTRAD) ./" --buildplace $(RUND)/build --basetgz $(CHROOTD)/$(ARCH).tgz --logfile $(RUND)/logs/claws_$(ARCH)_$(VERS).log && cd ../..
+	cp $@/*$(VERS)*.deb $@/*$(VERS)*.dsc $@/*$(VERS)*.changes $@/*$(VERS)*.tar.gz $(EXTRAD)/
 
 update-plugins-cow-$(ARCH): update-plugins-extra-$(ARCH)
 	sudo /usr/sbin/pbuilder update --basetgz $(CHROOTD)/$(ARCH).tgz --mirror $(MIRROR) --distribution sid --bindmounts $(RUND) --override-config --othermirror "deb file://$(EXTRAD) ./"
 
-plugins-deb-$(ARCH): claws-mail-extra-plugins-$(VERSION).tar.gz update-plugins-cow-$(ARCH)
+plugins-deb-$(ARCH): claws-mail-extra-plugins-$(VERS).tar.gz update-plugins-cow-$(ARCH)
 	test -d $@ || mkdir $@
-	cp -p $< $@/claws-mail-extra-plugins_$(VERSION).orig.tar.gz
-	cd $@ && tar xzf claws-mail-extra-plugins_$(VERSION).orig.tar.gz && cd ..
-	git clone $(DEBGITP)/claws-mail-extra-plugins $@/claws-mail-extra-plugins-$(VERSION)/debian
-	rm -rf $@/claws-mail-extra-plugins-$(VERSION)/debian/.git*
-	env DEBEMAIL=autobuilder@claws-mail.org DEBFULLNAME=CMAB debchange -c $@/claws-mail-extra-plugins-$(VERSION)/debian/changelog -D experimental -v $(VERSION)-1 "Automatic build at "`hostname`
+	cp -p $< $@/claws-mail-extra-plugins_$(VERS).orig.tar.gz
+	cd $@ && tar xzf claws-mail-extra-plugins_$(VERS).orig.tar.gz && cd ..
+	git clone $(DEBGITP)/claws-mail-extra-plugins $@/claws-mail-extra-plugins-$(VERS)/debian
+	rm -rf $@/claws-mail-extra-plugins-$(VERS)/debian/.git*
+	env DEBEMAIL=autobuilder@claws-mail.org DEBFULLNAME=CMAB debchange -c $@/claws-mail-extra-plugins-$(VERS)/debian/changelog -D experimental -v $(VERS)-1 "Automatic build at "`hostname`
 	test -d $(RUND)/logs || mkdir -p $(RUND)/logs
 	test -d $(RUND)/build || mkdir -p $(RUND)/build
-	cd $@/claws-mail-extra-plugins-$(VERSION) && sudo pdebuild --buildresult .. -- --bindmounts $(RUND) --override-config --mirror $(MIRROR) --distribution sid --othermirror "deb file://$(EXTRAD) ./" --buildplace $(RUND)/build --basetgz $(CHROOTD)/$(ARCH).tgz --logfile $(RUND)/logs/plugins_$(ARCH)_$(VERSION).log && cd ../..
-	cp $@/*$(VERSION)*.deb $@/*$(VERSION)*.dsc $@/*$(VERSION)*.changes $@/*$(VERSION)*.tar.gz $(EXTRAD)/
+	cd $@/claws-mail-extra-plugins-$(VERS) && sudo pdebuild --buildresult .. -- --bindmounts $(RUND) --override-config --mirror $(MIRROR) --distribution sid --othermirror "deb file://$(EXTRAD) ./" --buildplace $(RUND)/build --basetgz $(CHROOTD)/$(ARCH).tgz --logfile $(RUND)/logs/plugins_$(ARCH)_$(VERS).log && cd ../..
+	cp $@/*$(VERS)*.deb $@/*$(VERS)*.dsc $@/*$(VERS)*.changes $@/*$(VERS)*.tar.gz $(EXTRAD)/
 
 backup:
-	test -d $(RUND)/old/$(ARCH)-$(VERSION) || mkdir -p $(RUND)/old/$(ARCH)-$(VERSION)
-	mv $(EXTRAD)/*$(VERSION)*.deb $(EXTRAD)/*$(VERSION)*.dsc $(EXTRAD)/*$(VERSION)*.changes $(EXTRAD)/*$(VERSION)*.tar.gz $(RUND)/old/$(ARCH)-$(VERSION)
-	mv $(EXTRAD)/Packages* $(EXTRAD)/Release* $(EXTRAD)/Sources* $(RUND)/old/$(ARCH)-$(VERSION)
+	test -d $(RUND)/old/$(ARCH)-$(VERS) || mkdir -p $(RUND)/old/$(ARCH)-$(VERS)
+	mv $(EXTRAD)/*$(VERS)*.deb $(EXTRAD)/*$(VERS)*.dsc $(EXTRAD)/*$(VERS)*.changes $(EXTRAD)/*$(VERS)*.tar.gz $(RUND)/old/$(ARCH)-$(VERS)
+	mv $(EXTRAD)/Packages* $(EXTRAD)/Release* $(EXTRAD)/Sources* $(RUND)/old/$(ARCH)-$(VERS)
 
 clean:
 	sudo rm -rf claws-deb-$(ARCH) plugins-deb-$(ARCH)

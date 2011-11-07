@@ -5,7 +5,7 @@ DATETIME:=$(shell date)
 
 all: get-origs
 
-get-origs: claws-mail-$(VERSION).tar.gz claws-mail-extra-plugins-$(VERSION).tar.gz
+get-origs: claws-mail-$(VERS).tar.gz claws-mail-extra-plugins-$(VERS).tar.gz
 
 claws:
 	cvs -z3 -d$(CVSROOT) checkout -r gtk2 $@
@@ -20,27 +20,36 @@ update-plugins: plugins
 	cd $< && cvs -z3 up -dP && cd ..
 
 claws-dev: update-claws
+	rm -rf $@
 	cp -rp claws $@
 
 plugins-dev: update-plugins
+	rm -rf $@
 	cp -rp plugins $@
 
-claws-mail-extra-plugins-$(VERSION): plugins-dev
+claws-mail-extra-plugins-$(VERS): plugins-dev
 	for plugin in $(PLUGIN_LIST); do cd $</$$plugin && ./autogen.sh && make dist && cd ../..; done
-	mkdir ./claws-mail-extra-plugins-$(VERSION)
-	for plugin in $(PLUGIN_LIST); do tar -C ./claws-mail-extra-plugins-$(VERSION) -xzf $</$$plugin/*.tar.gz; done
-	echo "Automatic build for plugins $(VERSION) on $(HOSTNAME) at $(DATETIME)" > ./claws-mail-extra-plugins-$(VERSION)/RELEASE_NOTES
+	mkdir ./claws-mail-extra-plugins-$(VERS)
+	for plugin in $(PLUGIN_LIST); do tar -C ./claws-mail-extra-plugins-$(VERS) -xzf $</$$plugin/*.tar.gz; done
+	echo "Automatic build for plugins $(VERS) on $(HOSTNAME) at $(DATETIME)" > ./claws-mail-extra-plugins-$(VERS)/RELEASE_NOTES
 
-claws-mail-$(VERSION).tar.gz: claws-dev
+claws-mail-$(VERS).tar.gz: claws-dev
 	cd claws-dev && ./autogen.sh && make dist && cd ..
+	pwd
 	cp -v claws-dev/$@ .
 	
-claws-mail-extra-plugins-$(VERSION).tar.gz: claws-mail-extra-plugins-$(VERSION) 
+claws-mail-extra-plugins-$(VERS).tar.gz: claws-mail-extra-plugins-$(VERS) 
 	tar -czf $@ $<
 	rm -rf $<
 
 clean-origs:
-	rm -f claws-mail-$(VERSION).tar.gz
-	rm -f claws-mail-extra-plugins-$(VERSION).tar.gz
+	rm -f claws-mail-$(VERS).tar.gz
+	rm -f claws-mail-extra-plugins-$(VERS).tar.gz
 
-.PHONY: get-origs clean-origs update-claws update-plugins
+clean: clean-origs
+	rm -rf claws-dev plugins-dev
+
+mrproper: clean
+	rm -rf claws plugins
+
+.PHONY: get-origs clean mrproper clean-origs update-claws update-plugins
