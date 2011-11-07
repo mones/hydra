@@ -88,7 +88,7 @@ sub is_greater_version {
 
 sub check_make_error {
   my $log = shift;
-  open (LOG, "<$log") or die "opening $log: $!\n";
+  open(LOG, "<$log") or die "opening $log: $!\n";
   my $last = <LOG>;
   while (<LOG>) { $last = $_ }
   close(LOG) or die "closing $log: $!\n" ;
@@ -97,6 +97,18 @@ sub check_make_error {
     if (/^make.*Error/);
 }
 
+sub get_arch_list {
+  my $arcf = shift;
+  open(ARC, "<$arcf") or die "opening $arcf: $!\n";
+  my @archs = ();
+  while (<ARC>) {
+    chomp;
+    push(@archs, $_);
+  };
+  close(ARC) or die "closing $arcf: $!\n" ;
+  return \@archs;
+}
+  
 &refresh_module ("claws");
 &refresh_module ("plugins");
 
@@ -118,7 +130,8 @@ if (&is_greater_version ($VER, $OLD)) {
   qx,make -f $MKD VERS=$RVER >> $logname 2>&1,;
   &check_make_error($logname);
 
-  foreach my $ARCH ('amd64', 'i386') {
+  my $architectures = &get_arch_list("architectures");
+  foreach my $ARCH (@$architectures) {
     if ($OLD ne '0.0.0.0') {
       print "Archiving previous $OLD packages for $ARCH\n";
       qx,make -f $MKA VERS=$ROLD ARCH=$ARCH backup >> $logname 2>&1,;
