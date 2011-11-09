@@ -1,0 +1,9 @@
+*-deb-*
+extra-*
+update-*-*-*
+claws-mail-*.tar.gz
+claws-mail-extra-plugins-*.tar.gz
+claws
+claws-dev
+plugins
+plugins-dev

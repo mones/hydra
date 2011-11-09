@@ -30,6 +30,7 @@ use encoding 'utf8';
 my $CVS = ':pserver:anonymous@claws-mail.org:/';
 my $MKD = 'Makefile.dist';
 my $MKA = 'Makefile.arch';
+my $MKS = 'Makefile.stat';
 my $VER = undef;
 my $OLD = undef;
 
@@ -129,6 +130,8 @@ if (&is_greater_version ($VER, $OLD)) {
   print "Building new version $VER\n";
   qx,make -f $MKD VERS=$RVER >> $logname 2>&1,;
   &check_make_error($logname);
+  print "Updating status for version $VER\n";
+  qx,make -f $MKS VERS=$RVER all-source >> $logname 2>&1,;
 
   my $architectures = &get_arch_list("architectures");
   foreach my $ARCH (@$architectures) {
@@ -148,6 +151,8 @@ if (&is_greater_version ($VER, $OLD)) {
     &check_make_error($logname);
     print "Updating repository for $ARCH\n";
     qx,make -f $MKA VERS=$RVER ARCH=$ARCH update-extra-$ARCH >> $logname 2>&1,;
+    print "Updating status for $ARCH\n";
+    qx,make -f $MKS VERS=$RVER ARCH=$ARCH all-$ARCH >> $logname 2>&1,;
   }
 }
 
