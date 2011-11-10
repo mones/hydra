@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+ <title>Claws Mail CVS Debian Packages Autobuilder Status</title>
+ <link rel="stylesheet" href="arch.css" type="text/css" />
+</head>
+<body>
+<div class="content">
+ <h1>
+  <a href="http://www.claws-mail.org/">Claws Mail</a>
+  <a href="http://www.claws-mail.org/cvstrak-gtk2.php?section=projects">CVS</a>
+  <a href="http://packages.debian.org/sid/claws-mail">Debian Packages</a>
+  <a href="http://hydra.debian.net">Autobuilder</a>
+ </h1>
+ <table>
+  <tr>
+   <td class="cell0">Current status:</td>
+   <td class="cell1"><span class="<TMPL_VAR NAME=ARCH_STATUS>"><TMPL_VAR NAME=ARCH_STATUS></span></td>
+  </tr>
+  <tr>
+   <td class="cell0">Current version:</td>
+   <td class="cell1"><TMPL_VAR NAME=ARCH_VERSION></td>
+  </tr>
+  <tr>
+   <td class="cell0">Build architecture:</td>
+   <td class="cell1"><TMPL_VAR NAME=ARCH_NAME></td>
+  </tr>
+  <tr>
+   <td class="cell0">APT lines:</td>
+   <td class="cell1">deb <a href="http://hydra.debian.net/<TMPL_VAR NAME=ARCH_NAME>/">http://hydra.debian.net/<TMPL_VAR NAME=ARCH_NAME>/</a> ./<br />deb-src <a href="http://hydra.debian.net/<TMPL_VAR NAME=ARCH_NAME>/">http://hydra.debian.net/<TMPL_VAR NAME=ARCH_NAME>/</a> ./</td>
+  </tr>
+  <tr>
+   <td class="cell0"><a href="http://wiki.debian.org/SecureApt">APT key</a>:</td>
+   <td class="cell1"><a href="http://hydra.debian.net/public.key.txt">http://hydra.debian.net/public.key.txt</a><br /><tt id="subline">wget -O - http://hydra.debian.net/public.key.txt | apt-key add -</tt></td>
+  </tr>
+  <tr>
+   <td class="cell0">Last updated:</td>
+   <td class="cell1"><TMPL_VAR NAME=ARCH_LAST></td>
+  </tr>
+  <tr>
+   <td class="cell0">Available logs:</td>
+   <td class="cell1">2<br /><a href="logs/claws_<TMPL_VAR NAME=ARCH_NAME>_<TMPL_VAR NAME=ARCH_VERSION>.log">claws_<TMPL_VAR NAME=ARCH_NAME>_<TMPL_VAR NAME=ARCH_VERSION>.log"</a><br /><a href="logs/plugins_<TMPL_VAR NAME=ARCH_NAME>_<TMPL_VAR NAME=ARCH_VERSION>.log">plugins_<TMPL_VAR NAME=ARCH_NAME>_<TMPL_VAR NAME=ARCH_VERSION>.log</a></td>
+  </tr>
+ </table>
+ <p class="footp">
+ |<a href="http://validator.w3.org/check?uri=referer">Valid XHTML</a>|<a href="http://jigsaw.w3.org/css-validator/">Valid CSS</a>|<a href="https://github.com/mones/hydra">Source for this</a>|<a href="mailto:mones@debian.org">Copyright (C) 2008-2011 Ricardo Mones</a>|
+ </p>
+ <p class="footp">
+ |<a href="http://www.gplhost.com/">VPS host thanks to Thomas Goirand (zigo at debian dot org)</a>|
+ </p>
+</div>
+</body>
+</html>

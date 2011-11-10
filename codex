@@ -1,0 +1,114 @@
+#!/usr/bin/perl -w
+#
+# hydra² - Claws Mail CVS Debian Packages Autobuilder script (again!)
+#
+# Copyright (c) 2008-2011 Ricardo Mones <ricardo@mones.org>
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy  of this  software and  associated  documentation  files  (the
+# "Software"), to deal in the  Software without  restriction, including
+# without  limitation  the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or  sell copies  of the  Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The  above  copyright  notice and  this  permission  notice  shall be
+# included in  all  copies  or substantial  portions  of the  Software.
+#
+# THE  SOFTWARE IS  PROVIDED "AS IS",  WITHOUT  WARRANTY OF  ANY  KIND,
+# EXPRESS  OR  IMPLIED,  INCLUDING BUT  NOT LIMITED  TO THE  WARRANTIES
+# OF  MERCHANTABILITY,   FITNESS   FOR   A   PARTICULAR   PURPOSE   AND
+# NONINFRINGEMENT. IN  NO EVENT SHALL THE AUTHORS OR  COPYRIGHT HOLDERS
+# BE  LIABLE FOR ANY CLAIM,  DAMAGES OR OTHER  LIABILITY, WHETHER IN AN
+# ACTION  OF  CONTRACT, TORT OR  OTHERWISE, ARISING  FROM, OUT OF OR IN
+# CONNECTION  WITH THE  SOFTWARE OR  THE USE OR  OTHER  DEALINGS IN THE
+# SOFTWARE.
+#
+use strict;
+use encoding 'utf8';
+use HTML::Template;
+
+sub read_first_line {
+  my $file = shift;
+  open(FIL, "<$file") or die "opening $file: $!\n";
+  $_ = <FIL>;
+  chomp;
+  my $first = $_;
+  close(FIL) or die "closing $file: $!\n";
+  return $first;
+}
+
+sub get_arch_list {
+  my $arcf = shift;
+  open(ARC, "<$arcf") or die "opening $arcf: $!\n";
+  my @archs = ();
+  while (<ARC>) {
+    chomp;
+    push(@archs, $_);
+  };
+  close(ARC) or die "closing $arcf: $!\n" ;
+  return \@archs;
+}
+
+my $SOURCE = $ARGV[0];
+die "Source dir required\n" unless (defined($SOURCE) and -d $SOURCE);
+my $TARGET = $ARGV[1];
+die "Target dir required\n" unless (defined($TARGET) and -d $TARGET);
+my $TEMPLD = $ARGV[2];
+die "Templates dir required\n" unless (defined($TEMPLD) and -d $TEMPLD);
+
+# read status info
+my $version = &read_first_line("$SOURCE/version");
+my $source_status = &read_first_line("$SOURCE/status-source");
+my $source_last = &read_first_line("$SOURCE/status-source-last-change");
+my @architectures = ();
+my $archs = &get_arch_list("$SOURCE/architectures");
+foreach my $arch (@$archs) {
+  my $arch_name = $arch;
+  my $arch_status = &read_first_line("$SOURCE/status-$arch");
+  my $arch_last = &read_first_line("$SOURCE/status-$arch-last-change");
+  my $arch_version = &read_first_line("$SOURCE/version-$arch");
+  push(@architectures, {
+      ARCH_NAME => $arch_name,
+      ARCH_STATUS => $arch_status,
+      ARCH_LAST => $arch_last,
+      ARCH_VERSION => $arch_version
+    });
+}
+
+# write index
+my $tindex = HTML::Template->new(filename => "$TEMPLD/index.tmpl", die_on_bad_params => 0);
+open(IDX, ">$TARGET/index.html") or die "opening $TARGET/index.html: $!\n";
+$tindex->param(
+  VERSION => $version,
+  SOURCE_STATUS => $source_status,
+  SOURCE_LAST => $source_last,
+  ARCHITECTURES => \@architectures
+);
+print IDX $tindex->output;
+close(IDX) or die "closing $TARGET/index.html: $!\n";
+
+# write arch pages
+my $tarch = HTML::Template->new(filename => "$TEMPLD/arch.tmpl");
+foreach my $arch (@architectures) {
+  my $aname = $$arch{ARCH_NAME};
+  open(ARC, ">$TARGET/$aname.html") or die "opening $TARGET/$aname.html: $!\n";
+  $tarch->param($arch);
+  print ARC $tarch->output;
+  close(ARC) or die "closing $TARGET/$aname.html: $!\n";
+}
+
+# other files
+foreach my $other ('logo.png', 'arch.css', 'index.css', 'public.key.txt') {
+  qx,cp $TEMPLD/$other $TARGET,
+    unless (-f "$TARGET/$other");
+}
+
+# and links
+qx,ln -s $SOURCE/logs $TARGET/logs, unless (-l "$TARGET/logs");
+foreach my $arch (@architectures) {
+  my $aname = $$arch{ARCH_NAME};
+  qx,ln -s $SOURCE/extra-$aname $TARGET/$aname, unless (-l "$TARGET/$aname");
+}
+
+exit 0;

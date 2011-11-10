@@ -1,0 +1,48 @@
+body { 
+  margin: 5% 5% 5% 5%; 
+  color: black; 
+  font-family: Arial, Helvetica, sans-serif; 
+  background-image: url('http://people.debian.org/~mones/swirl.png');
+  background-position: top left;
+  background-repeat: no-repeat;
+}
+.content { background-image: url('logo.png'); background-position: top right; background-repeat: no-repeat; min-height: 380px; }
+.content h1 { font-size: 110%; }
+.content img { border: none; }
+.content a { text-decoration: none; }
+.content a:hover { border-bottom: 1px dotted black; }
+.content table { border: 1px solid black }
+.content table tr { background-color: rgb(220,220,220); opacity: 0.7; }
+.footp { 
+  font-size: 78%; 
+  font-family: Courier, monospace; 
+  color: rgb(172,172,172);
+}
+.footp a { color: rgb(172,172,172); }
+.footp a:hover { 
+  background-color: rgb(172,172,172); 
+  color: white; 
+  border: none; 
+}
+.cell0 { font-weight: bold; vertical-align: text-top; }
+.cell1 { font-family: Courier, monospace; }
+span { 
+  font-size: larger; 
+  background-color: black; 
+  font-weight: bold; 
+  padding-left: 5px; 
+  padding-right: 5px; 
+}
+#subline {
+  font-size: small;
+  font-family: monospace;
+  color: black; 
+  background-color: rgb(220,220,220);
+}
+.FAILED { color: red; }
+.UPDATING { color: rgb(100,100,250); }
+.BUILDING { color: yellow; }
+.PRE-PACKAGING { color: yellow; }
+.PACKAGING { color: yellow; } 
+.IDLE { color: rgb(0,210,0); }
+.UNKNOWN { color: white; }
