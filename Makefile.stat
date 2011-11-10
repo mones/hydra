@@ -1,5 +1,3 @@
-VERS=3.7.10cvs74
-ARCH=amd64
 
 status-source: version status-source-last-change
 	echo "IDLE" > $@

@@ -1,5 +1,6 @@
 etc/*
 logs/*
+old/*
 *-deb-*
 extra-*
 update-*-*-*
