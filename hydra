@@ -131,7 +131,7 @@ if (&is_greater_version ($VER, $OLD)) {
   qx,make -f $MKD VERS=$RVER >> $logname 2>&1,;
   &check_make_error($logname);
   print "Updating status for version $VER\n";
-  qx,make -f $MKS VERS=$RVER all-source >> $logname 2>&1,;
+  qx,make -f $MKS VERS=$RVER status-source >> $logname 2>&1,;
 
   my $architectures = &get_arch_list("etc/architectures");
   foreach my $ARCH (@$architectures) {
@@ -152,7 +152,7 @@ if (&is_greater_version ($VER, $OLD)) {
     print "Updating repository for $ARCH\n";
     qx,make -f $MKA VERS=$RVER ARCH=$ARCH update-extra-$ARCH >> $logname 2>&1,;
     print "Updating status for $ARCH\n";
-    qx,make -f $MKS VERS=$RVER ARCH=$ARCH all-$ARCH >> $logname 2>&1,;
+    qx,make -f $MKS VERS=$RVER ARCH=$ARCH status-$ARCH >> $logname 2>&1,;
   }
 }
 
