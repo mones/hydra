@@ -62,7 +62,7 @@ my $version = &read_first_line("$SOURCE/version");
 my $source_status = &read_first_line("$SOURCE/status-source");
 my $source_last = &read_first_line("$SOURCE/status-source-last-change");
 my @architectures = ();
-my $archs = &get_arch_list("$SOURCE/architectures");
+my $archs = &get_arch_list("$SOURCE/etc/architectures");
 foreach my $arch (@$archs) {
   my $arch_name = $arch;
   my $arch_status = &read_first_line("$SOURCE/status-$arch");

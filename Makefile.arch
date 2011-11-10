@@ -22,7 +22,7 @@ update-extra-$(ARCH): extra-$(ARCH)
 	cd $< && apt-ftparchive packages . > _ && cp -fp _ Packages && rm -f Packages.gz && gzip Packages && mv _ Packages && cd ..
 	cd $< && apt-ftparchive sources . > _ && cp -fp _ Sources && rm -f Sources.gz && gzip Sources && mv _ Sources && cd ..
 	cd $< && apt-ftparchive -o APT::FTPArchive::Release::Suite="$(SUITE)" -o APT::FTPArchive::Release::Components="main" -o APT::FTPArchive::Release::Origin="$(ORIGIN)" -o APT::FTPArchive::Release::Label="$(LABEL)" -o APT::FTPArchive::Release::Architectures="$(ARCH) source all" release . > Release && cd ..
-	test -f ./release.key.pw -a -f ./release.key.id && rm -f $</Release.gpg && gpg --no-tty --passphrase-file ./release.key.pw --default-key `cat ./release.key.id` -abs -o $</Release.gpg $</Release
+	test -f ./etc/release.key.pw -a -f ./etc/release.key.id && rm -f $</Release.gpg && gpg --no-tty --passphrase-file ./etc/release.key.pw --default-key `cat ./etc/release.key.id` -abs -o $</Release.gpg $</Release
 
 update-claws-extra-$(ARCH): update-extra-$(ARCH)
 	touch $@
