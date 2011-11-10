@@ -156,3 +156,5 @@ if (&is_greater_version ($VER, $OLD)) {
   }
 }
 
+exit 0;
+
