@@ -104,11 +104,17 @@ foreach my $other ('logo.png', 'arch.css', 'index.css', 'public.key.txt') {
     unless (-f "$TARGET/$other");
 }
 
-# and links
-qx,ln -s $SOURCE/logs $TARGET/logs, unless (-l "$TARGET/logs");
+# and generated stuff
+mkdir("$TARGET/logs")
+  unless (-d "$TARGET/logs");
+qx,rm -f $TARGET/logs/*,;
+qx,cp -p $SOURCE/logs/*$version* $TARGET/logs,;
 foreach my $arch (@architectures) {
   my $aname = $$arch{ARCH_NAME};
-  qx,ln -s $SOURCE/extra-$aname $TARGET/$aname, unless (-l "$TARGET/$aname");
+  mkdir ("$TARGET/$aname")
+    unless (-d "$TARGET/$aname");
+  qx,rm -f $TARGET/$aname/*,;
+  qx,cp -rp $SOURCE/extra-$aname/* $TARGET/$aname,;
 }
 
 exit 0;
