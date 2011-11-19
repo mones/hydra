@@ -6,13 +6,24 @@
 #
 use strict;
 use encoding 'utf8';
+use Mail::Sendmail;
 
 my $CVS = ':pserver:anonymous@claws-mail.org:/';
-my $MKD = 'Makefile.dist';
-my $MKA = 'Makefile.arch';
-my $MKS = 'Makefile.stat';
-my $VER = undef;
-my $OLD = undef;
+my ($VER, $OLD) = (undef, undef);
+my ($RVER, $ROLD) = (undef, undef);
+my $WHO = undef;
+
+my $RUN = $ARGV[0];
+die "Run dir required\n" unless (defined($RUN) and -d $RUN);
+my $HYD = $ARGV[1];
+$HYD = $RUN unless defined($HYD);
+die "Makefiles dir required\n" unless (-d $HYD);
+my $MKD = "$HYD/Makefile.dist";
+my $MKA = "$HYD/Makefile.arch";
+my $MKS = "$HYD/Makefile.stat";
+foreach my $mkfl ($MKD, $MKA, $MKS) {
+  die "$mkfl not found\n" unless (-f $mkfl);
+}
 
 sub refresh_module {
   my $mod = shift; # claws or plugins
@@ -68,14 +79,18 @@ sub is_greater_version {
 }
 
 sub check_make_error {
-  my $log = shift;
+  my ($log, $version, $recipients) = @_;
   open(LOG, "<$log") or die "opening $log: $!\n";
   my $last = <LOG>;
   while (<LOG>) { $last = $_ }
   close(LOG) or die "closing $log: $!\n" ;
   $_ = $last;
-  die "Finished with error. Check $log for details.\n"
-    if (/^make.*Error/);
+  if (/^make.*Error/) {
+    my $message = qx,tail -100 $log,;
+    $message = "Last lines of $log follow:\n---\n" . $message;
+    &mail_notify_for ($version, 'build failed', $message, $recipients);
+    die "Finished with error. Check $log for details.\n"
+  }
 }
 
 sub get_arch_list {
@@ -89,14 +104,47 @@ sub get_arch_list {
   close(ARC) or die "closing $arcf: $!\n" ;
   return \@archs;
 }
-  
+
+sub load_mail_recipients {
+  if (-f "etc/mailing.list") {
+    my @recipients = ();
+    open(MLF, "< etc/mailing.list") or die "Opening etc/mailing.list: $!\n";
+    while (<MLF>) {
+      chomp;
+      die "Invalid mail address: $_\n" unless (/^.*@.*$/);
+      push (@recipients, $_);
+    }
+    close(MLF) or die "Closing etc/mailing.list: $!\n";
+    return \@recipients unless ($#recipients < 0);
+  }
+  return undef;
+}
+
+sub mail_notify_for {
+  my ($version, $summary, $message, $recipients) = @_;
+  if (defined($recipients)) {
+    my %mail = (
+      'From' => 'noreply@hydra.debian.net',
+      'Subject' => "[HYDRA] Build $version : $summary",
+      'Message' => $message . "\n\nYour friendly hydra script.\n",
+    );
+    foreach my $recipient (@$recipients) {
+      $mail{'To'} = $recipient; 
+      sendmail(%mail) or die $Mail::Sendmail::error;
+    }
+  }
+}
+
+chdir($RUN);
+
 &refresh_module ("claws");
 &refresh_module ("plugins");
 
 $VER = &get_version ("claws/configure.ac");
 $OLD = &get_version ("claws-dev/configure.ac");
-my $RVER = &get_real_version($VER);
-my $ROLD = &get_real_version($OLD);
+$RVER = &get_real_version ($VER);
+$ROLD = &get_real_version ($OLD);
+$WHO = &load_mail_recipients;
 
 if (&is_greater_version ($VER, $OLD)) {
   mkdir("logs") unless (-d "logs");
@@ -105,11 +153,12 @@ if (&is_greater_version ($VER, $OLD)) {
   if ($OLD ne '0.0.0.0') {
     print "Cleaning previous version $OLD\n";
     qx,make -f $MKD VERS=$ROLD clean >> $logname 2>&1,;
-    # &check_make_error($logname);
   }
+  print "Cleaning status\n";
+  qx,make -f $MKS clean >> $logname 2>&1,;
   print "Building new version $VER\n";
   qx,make -f $MKD VERS=$RVER >> $logname 2>&1,;
-  &check_make_error($logname);
+  &check_make_error($logname, $RVER, $WHO);
   print "Updating status for version $VER\n";
   qx,make -f $MKS VERS=$RVER status-source >> $logname 2>&1,;
 
@@ -118,22 +167,29 @@ if (&is_greater_version ($VER, $OLD)) {
     if ($OLD ne '0.0.0.0') {
       print "Archiving previous $OLD packages for $ARCH\n";
       qx,make -f $MKA VERS=$ROLD ARCH=$ARCH backup >> $logname 2>&1,;
-      # &check_make_error($logname);
       print "Cleaning previous $OLD build for $ARCH\n";
       qx,make -f $MKA ARCH=$ARCH clean >> $logname 2>&1,;
-      # &check_make_error($logname);
     }
     print "Building new claws $VER packages for $ARCH\n";
     qx,make -f $MKA VERS=$RVER ARCH=$ARCH claws-deb-$ARCH >> $logname 2>&1,;
-    &check_make_error($logname);
+    &check_make_error($logname, $RVER, $WHO);
     print "Building new plugins $VER packages for $ARCH\n";
     qx,make -f $MKA VERS=$RVER ARCH=$ARCH plugins-deb-$ARCH >> $logname 2>&1,;
-    &check_make_error($logname);
+    &check_make_error($logname, $RVER, $WHO);
     print "Updating repository for $ARCH\n";
     qx,make -f $MKA VERS=$RVER ARCH=$ARCH update-extra-$ARCH >> $logname 2>&1,;
     print "Updating status for $ARCH\n";
     qx,make -f $MKS VERS=$RVER ARCH=$ARCH status-$ARCH >> $logname 2>&1,;
   }
+  mail_notify_for($RVER, 'build completed', 'Build was probably successful.', $WHO);
+}
+else {
+  if (-f "etc/verbose") {
+    my $msg = "Not building $RVER as $ROLD is already built\n";
+    print $msg;
+    mail_notify_for($RVER, 'build skipped', $msg, $WHO);
+  }
+  exit 1;
 }
 
 exit 0;
