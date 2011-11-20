@@ -86,7 +86,7 @@ sub check_make_error {
   close(LOG) or die "closing $log: $!\n" ;
   $_ = $last;
   if (/^make.*Error/) {
-    my $message = qx,tail -100 $log,;
+    my $message = qx,tail -120 $log,;
     $message = "Last lines of $log follow:\n---\n" . $message;
     &mail_notify_for ($version, 'build failed', $message, $recipients);
     die "Finished with error. Check $log for details.\n"
@@ -106,15 +106,16 @@ sub get_arch_list {
 }
 
 sub load_mail_recipients {
-  if (-f "etc/mailing.list") {
+  my $mailsfile  = shift;
+  if (defined($mailsfile) and -f $mailsfile) {
     my @recipients = ();
-    open(MLF, "< etc/mailing.list") or die "Opening etc/mailing.list: $!\n";
+    open(MLF, "< $mailsfile") or die "Opening $mailsfile: $!\n";
     while (<MLF>) {
       chomp;
-      die "Invalid mail address: $_\n" unless (/^.*@.*$/);
+      die "Invalid mail address in $mailsfile: $_\n" unless (/^.*@.*$/);
       push (@recipients, $_);
     }
-    close(MLF) or die "Closing etc/mailing.list: $!\n";
+    close(MLF) or die "Closing $mailsfile: $!\n";
     return \@recipients unless ($#recipients < 0);
   }
   return undef;
@@ -144,7 +145,7 @@ $VER = &get_version ("claws/configure.ac");
 $OLD = &get_version ("claws-dev/configure.ac");
 $RVER = &get_real_version ($VER);
 $ROLD = &get_real_version ($OLD);
-$WHO = &load_mail_recipients;
+$WHO = &load_mail_recipients ("etc/mailing.list");
 
 if (&is_greater_version ($VER, $OLD)) {
   mkdir("logs") unless (-d "logs");
@@ -181,7 +182,10 @@ if (&is_greater_version ($VER, $OLD)) {
     print "Updating status for $ARCH\n";
     qx,make -f $MKS VERS=$RVER ARCH=$ARCH status-$ARCH >> $logname 2>&1,;
   }
-  mail_notify_for($RVER, 'build completed', 'Build was probably successful.', $WHO);
+  if (-f "etc/verbose") {
+    print "Build $RVER finished\n";
+    mail_notify_for($RVER, 'build completed', 'Build was probably successful.', $WHO);
+  }
 }
 else {
   if (-f "etc/verbose") {
