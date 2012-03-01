@@ -1,0 +1,18 @@
+
+all:
+	@echo 'Try make reset or make purge VERS=<version>'
+
+reset:
+	@for m in claws plugins; do \
+	  rm -rf $${m}-dev/* && echo Removed $${m}-dev; \
+	  for a in i386 amd64; do \
+	    rm -rf $${m}-deb-$${a}/* && echo Removed $${m}-deb-$${a}; \
+	  done \
+	done
+
+purge:
+	@for a in i386 amd64; do \
+	  rm -rf old/$${a}-$(VERS)cvs* && echo Purged $(VERS) for $${a}; \
+	done
+
+.PHONY: all reset purge
