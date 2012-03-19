@@ -1,5 +1,5 @@
-CVSROOT=:pserver:anonymous@claws-mail.org:/
-PLUGIN_LIST=acpi_notifier address_keeper archive att_remover attachwarner clamd etpan-privacy fetchinfo gtkhtml2_viewer maildir mailmbox newmail notification perl rssyl spam_report tnef_parse vcalendar bsfilter fancy python geolocation gdata 
+CVSROOT=$(shell cat etc/cvs.root)
+PLUGIN_LIST=$(shell cat etc/plugin.list)
 HOSTNAME:=$(shell hostname)
 DATETIME:=$(shell date)
 

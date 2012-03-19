@@ -2,12 +2,12 @@ HOSTNAME:=$(shell hostname)
 DATETIME:=$(shell date)
 RUND:=$(shell pwd)
 EXTRAD=$(RUND)/extra-$(ARCH)
-CHROOTD=/home/mones/chroot
-MIRROR=http://ftp.fr.debian.org/debian/
-SUITE=unstable
-ORIGIN=Ricardo Mones
-LABEL=Claws Mail CVS Autobuilt Debian Packages
-DEBGITP=file:///home/mones/workg/tmp
+CHROOTD=$(shell cat etc/chroot.dir)
+MIRROR=$(shell cat etc/debian.mirror)
+SUITE=$(shell cat etc/repo.suite)
+ORIGIN=$(shell cat etc/repo.origin)
+LABEL=$(shell cat etc/repo.label)
+DEBGITP=$(shell cat etc/debian.git.path)
 
 claws-mail-$(VERS).tar.gz:
 	make -f Makefile.dist VERS=$(VERS) $@
