@@ -58,7 +58,11 @@ sub get_version {
 sub get_real_version {
   $_ = shift;
   if (/(\d+)\.(\d+)\.(\d+)\.(\d+)/) {
-    return "$1.$2.$3cvs$4";
+    if ("$4" eq '0') {
+      return "$1.$2.$3";
+    } else {
+      return "$1.$2.$3cvs$4";
+    }
   }
   return $_;
 }
