@@ -42,7 +42,7 @@ claws-deb-$(ARCH): claws-mail-$(VERS).tar.gz update-claws-cow-$(ARCH)
 	cd $@ && tar xzf claws-mail_$(VERS).orig.tar.gz && cd ..
 	git clone $(DEBGITP)/claws-mail $@/claws-mail-$(VERS)/debian
 	rm -rf $@/claws-mail-$(VERS)/debian/.git*
-	env DEBEMAIL=autobuilder@claws-mail.org DEBFULLNAME=CMAB debchange -c $@/claws-mail-$(VERS)/debian/changelog -D experimental -v $(VERS)-1 "Automatic build at $(HOSTNAME)"
+	env DEBEMAIL=autobuilder@claws-mail.org DEBFULLNAME=CMAB debchange -c $@/claws-mail-$(VERS)/debian/changelog -D experimental -v $(VERS)-`head -1 $@/claws-mail-$(VERS)/debian/changelog | sed 's,.*(\(.*\)).*,\1,' | awk -F - '/.*cvs.*/ { print 1 } /[0-9]+.[0-9]+-[0-9]+/ { print $2+1 }'` "Automatic build at $(HOSTNAME)"
 	test -d $(RUND)/logs || mkdir -p $(RUND)/logs
 	test -d $(RUND)/build || mkdir -p $(RUND)/build
 	cd $@/claws-mail-$(VERS) && sudo pdebuild --buildresult .. -- --bindmounts $(RUND) --override-config --mirror $(MIRROR) --distribution sid --othermirror "deb file://$(EXTRAD) ./" --buildplace $(RUND)/build --basetgz $(CHROOTD)/$(ARCH).tgz --logfile $(RUND)/logs/claws_$(ARCH)_$(VERS).log && cd ../..
