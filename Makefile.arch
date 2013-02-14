@@ -12,9 +12,6 @@ DEBGITP=$(shell cat etc/debian.git.path)
 claws-mail-$(VERS).tar.gz:
 	make -f Makefile.dist VERS=$(VERS) $@
 
-claws-mail-extra-plugins-$(VERS).tar.gz:
-	make -f Makefile.dist VERS=$(VERS) $@
-
 extra-$(ARCH):
 	test -d $@ || mkdir $@
 
@@ -25,9 +22,6 @@ update-extra-$(ARCH): extra-$(ARCH)
 	test -f ./etc/release.key.pw -a -f ./etc/release.key.id && rm -f $</Release.gpg && gpg --no-tty --passphrase-file ./etc/release.key.pw --default-key `cat ./etc/release.key.id` -abs -o $</Release.gpg $</Release
 
 update-claws-extra-$(ARCH): update-extra-$(ARCH)
-	touch $@
-
-update-plugins-extra-$(ARCH): update-extra-$(ARCH)
 	touch $@
 
 update-final-extra-$(ARCH): update-extra-$(ARCH)
@@ -48,28 +42,13 @@ claws-deb-$(ARCH): claws-mail-$(VERS).tar.gz update-claws-cow-$(ARCH)
 	cd $@/claws-mail-$(VERS) && sudo pdebuild --buildresult .. -- --bindmounts $(RUND) --override-config --mirror $(MIRROR) --distribution sid --othermirror "deb file://$(EXTRAD) ./" --buildplace $(RUND)/build --basetgz $(CHROOTD)/$(ARCH).tgz --logfile $(RUND)/logs/claws_$(ARCH)_$(VERS).log && cd ../..
 	cp $@/*$(VERS)*.deb $@/*$(VERS)*.dsc $@/*$(VERS)*.changes $@/*$(VERS)*.tar.gz $(EXTRAD)/
 
-update-plugins-cow-$(ARCH): update-plugins-extra-$(ARCH)
-	sudo /usr/sbin/pbuilder update --basetgz $(CHROOTD)/$(ARCH).tgz --mirror $(MIRROR) --distribution sid --bindmounts $(RUND) --override-config --othermirror "deb file://$(EXTRAD) ./"
-
-plugins-deb-$(ARCH): claws-mail-extra-plugins-$(VERS).tar.gz update-plugins-cow-$(ARCH)
-	test -d $@ || mkdir $@
-	cp -p $< $@/claws-mail-extra-plugins_$(VERS).orig.tar.gz
-	cd $@ && tar xzf claws-mail-extra-plugins_$(VERS).orig.tar.gz && cd ..
-	git clone $(DEBGITP)/claws-mail-extra-plugins $@/claws-mail-extra-plugins-$(VERS)/debian
-	rm -rf $@/claws-mail-extra-plugins-$(VERS)/debian/.git*
-	env DEBEMAIL=autobuilder@claws-mail.org DEBFULLNAME=CMAB debchange -c $@/claws-mail-extra-plugins-$(VERS)/debian/changelog -D experimental -v $(VERS)-1 "Automatic build at "`hostname`
-	test -d $(RUND)/logs || mkdir -p $(RUND)/logs
-	test -d $(RUND)/build || mkdir -p $(RUND)/build
-	cd $@/claws-mail-extra-plugins-$(VERS) && sudo pdebuild --buildresult .. -- --bindmounts $(RUND) --override-config --mirror $(MIRROR) --distribution sid --othermirror "deb file://$(EXTRAD) ./" --buildplace $(RUND)/build --basetgz $(CHROOTD)/$(ARCH).tgz --logfile $(RUND)/logs/plugins_$(ARCH)_$(VERS).log && cd ../..
-	cp $@/*$(VERS)*.deb $@/*$(VERS)*.dsc $@/*$(VERS)*.changes $@/*$(VERS)*.tar.gz $(EXTRAD)/
-
 backup:
 	test -d $(RUND)/old/$(ARCH)-$(VERS) || mkdir -p $(RUND)/old/$(ARCH)-$(VERS)
 	mv $(EXTRAD)/*$(VERS)*.deb $(EXTRAD)/*$(VERS)*.dsc $(EXTRAD)/*$(VERS)*.changes $(EXTRAD)/*$(VERS)*.tar.gz $(RUND)/old/$(ARCH)-$(VERS)
 	mv $(EXTRAD)/Packages* $(EXTRAD)/Release* $(EXTRAD)/Sources* $(RUND)/old/$(ARCH)-$(VERS)
 
 clean:
-	sudo rm -rf claws-deb-$(ARCH) plugins-deb-$(ARCH)
+	sudo rm -rf claws-deb-$(ARCH) 
 	sudo rm -f update-*-extra-$(ARCH)
 
 mrproper: clean

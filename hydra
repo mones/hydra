@@ -26,7 +26,7 @@ foreach my $mkfl ($MKD, $MKA, $MKS) {
 }
 
 sub refresh_module {
-  my $mod = shift; # claws or plugins
+  my $mod = shift; # claws
   if (-d $mod) {
     chdir($mod);
     qx,cvs -z3 update > /dev/null 2>&1,;
@@ -143,7 +143,6 @@ sub mail_notify_for {
 chdir($RUN);
 
 &refresh_module ("claws");
-&refresh_module ("plugins");
 
 $VER = &get_version ("claws/configure.ac");
 $OLD = &get_version ("claws-dev/configure.ac");
@@ -177,9 +176,6 @@ if (&is_greater_version ($VER, $OLD)) {
     }
     print "Building new claws $VER packages for $ARCH\n";
     qx,make -f $MKA VERS=$RVER ARCH=$ARCH claws-deb-$ARCH >> $logname 2>&1,;
-    &check_make_error($logname, $RVER, $WHO);
-    print "Building new plugins $VER packages for $ARCH\n";
-    qx,make -f $MKA VERS=$RVER ARCH=$ARCH plugins-deb-$ARCH >> $logname 2>&1,;
     &check_make_error($logname, $RVER, $WHO);
     print "Updating repository for $ARCH\n";
     qx,make -f $MKA VERS=$RVER ARCH=$ARCH update-extra-$ARCH >> $logname 2>&1,;

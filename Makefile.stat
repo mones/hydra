@@ -6,13 +6,13 @@ status-$(ARCH): version-$(ARCH) status-$(ARCH)-last-change
 	echo "IDLE" > $@
 
 status-source-last-change:
-	date -r ./claws-mail-extra-plugins-$(VERS).tar.gz > $@
+	date -r ./claws-mail-$(VERS).tar.gz > $@
 
 version:
 	echo $(VERS) > $@
 
 status-$(ARCH)-last-change:
-	date -r plugins-deb-$(ARCH)/claws-mail-extra-plugins_$(VERS)-*_$(ARCH).changes > $@
+	date -r claws-deb-$(ARCH)/claws-mail_$(VERS)-*_$(ARCH).changes > $@
 
 version-$(ARCH):
 	echo $(VERS) > $@
