@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# hydra² - Claws Mail CVS Debian Packages Autobuilder script (again!)
+# hydra² - Claws Mail Git Debian Packages Autobuilder script (again!)
 #
 # See LICENSE file for licensing details.
 #
@@ -8,7 +8,7 @@ use strict;
 use encoding 'utf8';
 use Mail::Sendmail;
 
-my $CVS = ':pserver:anonymous@claws-mail.org:/';
+my $GIT = 'git://git.claws-mail.org/';
 my ($VER, $OLD) = (undef, undef);
 my ($RVER, $ROLD) = (undef, undef);
 my $WHO = undef;
@@ -29,42 +29,37 @@ sub refresh_module {
   my $mod = shift; # claws
   if (-d $mod) {
     chdir($mod);
-    qx,cvs -z3 update > /dev/null 2>&1,;
+    qx,git pull --all > /dev/null 2>&1,;
     chdir("..");
   } else {
-    qx,cvs -z3 -d$CVS checkout -r gtk2 $mod > /dev/null 2>&1,;
+    qx,git clone $GIT$mod.git > /dev/null 2>&1,;
   }
 }
 
 sub get_version {
-  my $acfile = shift;
-  my @ver = ("0", "0", "0", "0");
-  if (-f $acfile) {
-    open(AC, "< $acfile") or die "opening $acfile: $!\n";
-    my $i = 0;
-    while (<AC>) {
-      chomp;
-      if (/MAJOR_VERSION=(\d+)/) { $ver[0] = $1; ++$i; }
-      if (/MINOR_VERSION=(\d+)/) { $ver[1] = $1; ++$i; }
-      if (/MICRO_VERSION=(\d+)/) { $ver[2] = $1; ++$i; }
-      if (/EXTRA_VERSION=(\d+)/) { $ver[3] = $1; ++$i; }
-      last unless ($i lt 4);
-    }
-    close(AC) or die "closing configure.ac: $!\n";
+  my $gitdir = shift;
+  chdir($gitdir) or return '0.0.0.0';
+  $_ = qx/git describe --abbrev=6 --dirty --always/;
+  chdir('..');
+  # 3.9.0-141-g3da40e or 3.9.0
+  if (/(\d+)\.(\d+)\.(\d+)-(\d+)-.*/) {
+    return "$1.$2.$3.$4";
   }
-  return join('.', @ver);
+  if (/(\d+)\.(\d+)\.(\d+)/) {
+    return "$_.0";
+  }
+  die "got invalid version: $_\n";
 }
 
 sub get_real_version {
   $_ = shift;
-  if (/(\d+)\.(\d+)\.(\d+)\.(\d+)/) {
-    if ("$4" eq '0') {
-      return "$1.$2.$3";
-    } else {
-      return "$1.$2.$3cvs$4";
-    }
+  if (/(\d+)\.(\d+)\.(\d+)\.(\d+)/) { # 3.9.0.141
+      if ($4 ne "0") {
+        return "$1.$2.$3" . "git$4";
+      }
+      return "$1.$2.$3"; # 3.9.0
   }
-  return $_;
+  die "invalid version: $_\n";
 }
 
 sub is_greater_version {
@@ -144,8 +139,8 @@ chdir($RUN);
 
 &refresh_module ("claws");
 
-$VER = &get_version ("claws/configure.ac");
-$OLD = &get_version ("claws-dev/configure.ac");
+$VER = &get_version ("claws");
+$OLD = &get_version ("claws-dev");
 $RVER = &get_real_version ($VER);
 $ROLD = &get_real_version ($OLD);
 $WHO = &load_mail_recipients ("etc/mailing.list");
@@ -154,7 +149,7 @@ if (&is_greater_version ($VER, $OLD)) {
   mkdir("logs") unless (-d "logs");
   my $logname = "logs/hydra.$VER.log";
 
-  if ($OLD ne '0.0.0.0') {
+  if ($OLD ne '0.0.0.0.0') {
     print "Cleaning previous version $OLD\n";
     qx,make -f $MKD VERS=$ROLD clean >> $logname 2>&1,;
   }
@@ -168,7 +163,7 @@ if (&is_greater_version ($VER, $OLD)) {
 
   my $architectures = &get_arch_list("etc/architectures");
   foreach my $ARCH (@$architectures) {
-    if ($OLD ne '0.0.0.0') {
+    if ($OLD ne '0.0.0.0.0') {
       print "Archiving previous $OLD packages for $ARCH\n";
       qx,make -f $MKA VERS=$ROLD ARCH=$ARCH backup >> $logname 2>&1,;
       print "Cleaning previous $OLD build for $ARCH\n";

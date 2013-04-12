@@ -1,4 +1,4 @@
-CVSROOT=$(shell cat etc/cvs.root)
+GITREPO=$(shell cat etc/git.repository)
 HOSTNAME:=$(shell hostname)
 DATETIME:=$(shell date)
 
@@ -7,10 +7,10 @@ all: get-origs
 get-origs: claws-mail-$(VERS).tar.gz 
 
 claws:
-	cvs -z3 -d$(CVSROOT) checkout -r gtk2 $@
+	git clone $(GITREPO)$@.git
 
 update-claws: claws
-	cd $< && cvs -z3 up -dP && cd ..
+	cd $< && git pull --all && cd ..
 
 claws-dev: update-claws
 	rm -rf $@
