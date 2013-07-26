@@ -1,6 +1,12 @@
 
 all:
-	@echo 'Try make reset or make purge VERS=<version>'
+	@echo 'Try:'
+	@echo '  make du'
+	@echo '      To view disk usage of growing dirs.'
+	@echo '  make reset'
+	@echo '      To reinitialize the build system.'
+	@echo '  make purge VERS=<version>'
+	@echo '      To remove deb files of that and old version.'
 
 reset:
 	@for m in claws; do \
@@ -12,7 +18,13 @@ reset:
 
 purge:
 	@for a in i386 amd64; do \
-	  rm -rf old/$${a}-$(VERS)cvs* && echo Purged $(VERS) for $${a}; \
+	  rm -rf old/$${a}-$(VERS)cvs* old/$${a}-$(VERS)git* old/$${a}-$(VERS) \
+	    && echo Purged $(VERS) for $${a}; \
 	done
 
-.PHONY: all reset purge
+du:
+	@du -sh old/
+	@du -sh logs/
+	@du -sh /var/cache/pbuilder/aptcache
+
+.PHONY: all reset purge du
