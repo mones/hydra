@@ -28,7 +28,7 @@ update-final-extra-$(ARCH): update-extra-$(ARCH)
 	touch $@
 
 update-claws-cow-$(ARCH): update-claws-extra-$(ARCH)
-	sudo /usr/sbin/pbuilder update --basetgz $(CHROOTD)/$(ARCH).tgz --mirror $(MIRROR) --distribution sid --bindmounts $(RUND) --override-config --othermirror "deb file://$(EXTRAD) ./"
+	sudo /usr/sbin/pbuilder update --autocleanaptcache --basetgz $(CHROOTD)/$(ARCH).tgz --mirror $(MIRROR) --distribution sid --bindmounts $(RUND) --override-config --othermirror "deb file://$(EXTRAD) ./"
 
 claws-deb-$(ARCH): claws-mail-$(VERS).tar.gz update-claws-cow-$(ARCH)
 	test -d $@ || mkdir $@
