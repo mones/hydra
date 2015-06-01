@@ -5,7 +5,7 @@
 # See LICENSE file for licensing details.
 #
 use strict;
-use encoding 'utf8';
+use utf8;
 use Mail::Sendmail;
 
 my $GIT = 'git://git.claws-mail.org/';
@@ -24,6 +24,7 @@ my $MKS = "$HYD/Makefile.stat";
 foreach my $mkfl ($MKD, $MKA, $MKS) {
   die "$mkfl not found\n" unless (-f $mkfl);
 }
+my $verbose = -f "$HYD/etc/verbose";
 
 sub refresh_module {
   my $mod = shift; # claws
@@ -36,17 +37,23 @@ sub refresh_module {
   }
 }
 
+sub this_version {
+  my ($d, $v) = @_;
+  print "$d version is $v\n" if $verbose;
+  return $v;
+}
+
 sub get_version {
   my $gitdir = shift;
-  chdir($gitdir) or return '0.0.0.0';
+  chdir($gitdir) or return this_version($gitdir, '0.0.0.0');
   $_ = qx/git describe --abbrev=6 --dirty --always/;
   chdir('..');
   # 3.9.0-141-g3da40e or 3.9.0
   if (/(\d+)\.(\d+)\.(\d+)-(\d+)-.*/) {
-    return "$1.$2.$3.$4";
+    return this_version($gitdir, "$1.$2.$3.$4");
   }
   if (/(\d+)\.(\d+)\.(\d+)/) {
-    return "$1.$2.$3.0";
+    return this_version($gitdir, "$1.$2.$3.0");
   }
   die "got invalid version: $_\n";
 }
@@ -177,13 +184,13 @@ if (&is_greater_version ($VER, $OLD)) {
     print "Updating status for $ARCH\n";
     qx,make -f $MKS VERS=$RVER ARCH=$ARCH status-$ARCH >> $logname 2>&1,;
   }
-  if (-f "etc/verbose") {
+  if ($verbose) {
     print "Build $RVER finished\n";
     mail_notify_for($RVER, 'build completed', 'Build was probably successful.', $WHO);
   }
 }
 else {
-  if (-f "etc/verbose") {
+  if ($verbose) {
     my $msg = "Not building $RVER as $ROLD is already built\n";
     print $msg;
     mail_notify_for($RVER, 'build skipped', $msg, $WHO);
