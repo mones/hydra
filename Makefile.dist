@@ -10,7 +10,7 @@ claws:
 	git clone $(GITREPO)$@.git
 
 update-claws: claws
-	cd $< && git pull --all && cd ..
+	cd $< && git pull --rebase && cd ..
 
 claws-dev: update-claws
 	rm -rf $@
