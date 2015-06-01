@@ -1,4 +1,6 @@
 
+CHROOTD=$(shell cat etc/chroot.dir)
+
 all:
 	@echo 'Try:'
 	@echo '  make du'
@@ -7,6 +9,8 @@ all:
 	@echo '      To reinitialize the build system.'
 	@echo '  make purge VERS=<version>'
 	@echo '      To remove deb files of that and old version.'
+	@echo '  make change ARCH={i386|amd64}'
+	@echo '      To log into chroot and make permanent changes.'
 
 reset:
 	@for m in claws; do \
@@ -27,4 +31,7 @@ du:
 	@du -sh logs/
 	@du -sh /var/cache/pbuilder/aptcache
 
-.PHONY: all reset purge du
+change:
+	@sudo /usr/sbin/pbuilder --login --save-after-login --basetgz $(CHROOTD)/$(ARCH).tgz || true
+
+.PHONY: all reset purge du change
