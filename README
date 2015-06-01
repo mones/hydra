@@ -1,7 +1,7 @@
 
 This is the code behind http://hydra.debian.net
 
-It builds Debian packages for Claws Mail using latest Git code
+It builds Debian packages for Claws Mail using latest CVS code
 of Claws Mail and latest Git code for the Debian packaging, and
 it does it inside an updated Debian unstable chroot.
 
