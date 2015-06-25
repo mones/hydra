@@ -14,7 +14,7 @@ all:
 
 reset:
 	@for m in claws; do \
-	  rm -rf $${m}-dev/* && echo Removed $${m}-dev; \
+	  rm -rf $${m}-dev && echo Removed $${m}-dev; \
 	  for a in i386 amd64; do \
 	    rm -rf $${m}-deb-$${a}/* && echo Removed $${m}-deb-$${a}; \
 	  done \
