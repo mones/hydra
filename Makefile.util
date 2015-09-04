@@ -1,5 +1,6 @@
 
 CHROOTD=$(shell cat etc/chroot.dir)
+ARCHS=i386 amd64
 
 all:
 	@echo 'Try:'
@@ -15,14 +16,17 @@ all:
 reset:
 	@for m in claws; do \
 	  rm -rf $${m}-dev && echo Removed $${m}-dev; \
-	  for a in i386 amd64; do \
+	  for a in $(ARCHS); do \
 	    rm -rf $${m}-deb-$${a}/* && echo Removed $${m}-deb-$${a}; \
 	  done \
 	done
 
 purge:
-	@for a in i386 amd64; do \
-	  rm -rf old/$${a}-$(VERS)cvs* old/$${a}-$(VERS)git* old/$${a}-$(VERS) \
+	@for a in $(ARCHS); do \
+	  rm -rf old/$${a}-$(VERS)cvs* \
+		old/$${a}-$(VERS)git* \
+		old/$${a}-$(VERS) \
+		extra-$${a}/*claws*$(VERS)*.deb \
 	    && echo Purged $(VERS) for $${a}; \
 	done
 
@@ -30,6 +34,7 @@ du:
 	@du -sh old/
 	@du -sh logs/
 	@du -sh /var/cache/pbuilder/aptcache
+	@for a in $(ARCHS); do du -sh extra-$${a}; done
 
 change:
 	@sudo /usr/sbin/pbuilder --login --save-after-login --basetgz $(CHROOTD)/$(ARCH).tgz || true
